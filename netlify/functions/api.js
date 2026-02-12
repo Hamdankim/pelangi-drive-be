@@ -104,9 +104,9 @@ function loadJsonFile(fileName) {
 function readJsonSafe(fileName) {
     try {
         loadJsonFile(fileName);
-        return true;
+        return { ok: true, error: null };
     } catch (error) {
-        return false;
+        return { ok: false, error: error && error.message ? error.message : "Invalid JSON" };
     }
 }
 
@@ -480,6 +480,8 @@ exports.handler = async (event) => {
             writeJsonFromEnv("CLIENT_SECRET_JSON_BASE64", path.join(CREDENTIALS_DIR, "client_secret.json"));
             const tokenPath = resolveCredentialPath("token.json");
             const clientPath = resolveCredentialPath("client_secret.json");
+            const tokenStatus = readJsonSafe("token.json");
+            const clientStatus = readJsonSafe("client_secret.json");
             const status = {
                 env: {
                     tokenSet: Boolean(process.env.TOKEN_JSON_BASE64),
@@ -488,10 +490,14 @@ exports.handler = async (event) => {
                 files: {
                     tokenExists: fs.existsSync(tokenPath),
                     clientExists: fs.existsSync(clientPath),
+                    tokenSize: fs.existsSync(tokenPath) ? fs.statSync(tokenPath).size : 0,
+                    clientSize: fs.existsSync(clientPath) ? fs.statSync(clientPath).size : 0,
                 },
                 json: {
-                    tokenReadable: readJsonSafe("token.json"),
-                    clientReadable: readJsonSafe("client_secret.json"),
+                    tokenReadable: tokenStatus.ok,
+                    clientReadable: clientStatus.ok,
+                    tokenError: tokenStatus.error,
+                    clientError: clientStatus.error,
                 },
             };
             return withCors(
