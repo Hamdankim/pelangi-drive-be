@@ -158,7 +158,7 @@ function parseMultipart(event) {
             return;
         }
 
-        const busboy = new Busboy({ headers: { "content-type": contentType } });
+        const busboy = Busboy({ headers: { "content-type": contentType } });
         const fields = {};
         let fileBuffer;
         let filename = "";
