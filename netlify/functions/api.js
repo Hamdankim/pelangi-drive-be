@@ -457,15 +457,9 @@ exports.handler = async (event) => {
             stage = "write-pdf";
             fs.writeFileSync(pdfPath, fileBuffer);
 
-            stage = "detect-format";
-            const formatType = await detectFormat(fileBuffer, filename);
-            if (formatType === "neraca") {
-                stage = "convert-neraca";
-                await convertNeraca(fileBuffer, excelPath);
-            } else {
-                stage = "convert-default";
-                await convertPdfToExcel(fileBuffer, excelPath);
-            }
+            stage = "convert-pdfco";
+            const formatType = "pdfco";
+            await convertNeraca(fileBuffer, excelPath);
 
             stage = "upload-drive";
             const folderId = fields.folder_id || (event.queryStringParameters || {}).folder_id;
