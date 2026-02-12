@@ -101,6 +101,15 @@ function loadJsonFile(fileName) {
     return JSON.parse(content);
 }
 
+function readJsonSafe(fileName) {
+    try {
+        loadJsonFile(fileName);
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
 function writeJsonFromEnv(envName, targetFile) {
     if (fs.existsSync(targetFile)) {
         return;
@@ -461,6 +470,33 @@ exports.handler = async (event) => {
                     statusCode: 200,
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ items }),
+                },
+                origin
+            );
+        }
+
+        if (routePath === "/health" && event.httpMethod === "GET") {
+            const tokenPath = resolveCredentialPath("token.json");
+            const clientPath = resolveCredentialPath("client_secret.json");
+            const status = {
+                env: {
+                    tokenSet: Boolean(process.env.TOKEN_JSON_BASE64),
+                    clientSet: Boolean(process.env.CLIENT_SECRET_JSON_BASE64),
+                },
+                files: {
+                    tokenExists: fs.existsSync(tokenPath),
+                    clientExists: fs.existsSync(clientPath),
+                },
+                json: {
+                    tokenReadable: readJsonSafe("token.json"),
+                    clientReadable: readJsonSafe("client_secret.json"),
+                },
+            };
+            return withCors(
+                {
+                    statusCode: 200,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(status),
                 },
                 origin
             );
