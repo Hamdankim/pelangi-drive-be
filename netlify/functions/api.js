@@ -92,10 +92,36 @@ function loadJsonFile(fileName) {
     return JSON.parse(content);
 }
 
+function writeJsonFromEnv(envName, targetFile) {
+    if (fs.existsSync(targetFile)) {
+        return;
+    }
+    const raw = process.env[envName];
+    if (!raw) {
+        return;
+    }
+
+    const trimmed = raw.trim();
+    if (trimmed.startsWith("{")) {
+        fs.writeFileSync(targetFile, trimmed, "utf-8");
+        return;
+    }
+
+    try {
+        const decoded = Buffer.from(trimmed, "base64");
+        fs.writeFileSync(targetFile, decoded);
+    } catch (error) {
+        // Ignore invalid base64.
+    }
+}
+
 function getDrive() {
     if (driveClient) {
         return driveClient;
     }
+
+    writeJsonFromEnv("TOKEN_JSON_BASE64", path.join(process.cwd(), "token.json"));
+    writeJsonFromEnv("CLIENT_SECRET_JSON_BASE64", path.join(process.cwd(), "client_secret.json"));
 
     const token = loadJsonFile("token.json");
     const clientSecret = loadJsonFile("client_secret.json");

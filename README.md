@@ -73,5 +73,17 @@ This repo includes a serverless entry point at netlify/functions/api.js.
 
 ### Google Drive credentials on Netlify
 
-Netlify does not support secret files. For simplicity, this setup expects
-token.json and client_secret.json to be committed to the repo.
+Netlify does not support secret files. Use env vars to provide JSON contents:
+
+- TOKEN_JSON_BASE64: base64-encoded token.json
+- CLIENT_SECRET_JSON_BASE64: base64-encoded client_secret.json
+
+You can generate base64 like this:
+
+```bash
+python - <<'PY'
+import base64
+print(base64.b64encode(open('token.json','rb').read()).decode())
+print(base64.b64encode(open('client_secret.json','rb').read()).decode())
+PY
+```
