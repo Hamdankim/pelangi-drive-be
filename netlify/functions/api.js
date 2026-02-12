@@ -238,7 +238,7 @@ function convertPdfToExcel(buffer, outputPath) {
             reject(error.parserError || error);
         });
 
-        pdfParser.on("pdfParser_dataReady", (pdfData) => {
+        pdfParser.on("pdfParser_dataReady", async (pdfData) => {
             const rows = [];
             const pages = pdfData && pdfData.formImage && pdfData.formImage.Pages
                 ? pdfData.formImage.Pages
@@ -246,6 +246,21 @@ function convertPdfToExcel(buffer, outputPath) {
             for (const page of pages) {
                 rows.push(...extractRowsFromPage(page));
                 rows.push([]);
+            }
+
+            if (rows.length === 0) {
+                try {
+                    const parsed = await pdfParse(buffer);
+                    const lines = (parsed.text || "")
+                        .split(/\r?\n/)
+                        .map((line) => line.trim())
+                        .filter(Boolean);
+                    for (const line of lines) {
+                        rows.push([line]);
+                    }
+                } catch (error) {
+                    // Ignore text fallback errors.
+                }
             }
 
             const workbook = XLSX.utils.book_new();
