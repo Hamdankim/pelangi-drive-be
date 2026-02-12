@@ -403,6 +403,7 @@ async function createFolder(name, parentId) {
 
 exports.handler = async (event) => {
     const origin = getOrigin(event.headers || {});
+    let stage = "init";
 
     if (event.httpMethod === "OPTIONS") {
         return withCors({ statusCode: 204, body: "" }, origin);
@@ -413,6 +414,7 @@ exports.handler = async (event) => {
 
     try {
         if (routePath === "/upload" && event.httpMethod === "POST") {
+            stage = "parse-multipart";
             const { fileBuffer, filename, mimeType, fields } = await parseMultipart(event);
             if (!fileBuffer || !filename) {
                 return withCors(
@@ -427,24 +429,31 @@ exports.handler = async (event) => {
                 );
             }
 
+            stage = "prepare-files";
             const fileId = crypto.randomUUID();
             const baseName = safeFilename(filename);
             const excelName = `${baseName}.xlsx`;
             const pdfPath = path.join(UPLOAD_DIR, `${fileId}.pdf`);
             const excelPath = path.join(UPLOAD_DIR, `${fileId}.xlsx`);
 
+            stage = "write-pdf";
             fs.writeFileSync(pdfPath, fileBuffer);
 
+            stage = "detect-format";
             const formatType = await detectFormat(fileBuffer, filename);
             if (formatType === "neraca") {
+                stage = "convert-neraca";
                 await convertNeraca(fileBuffer, excelPath);
             } else {
+                stage = "convert-default";
                 await convertPdfToExcel(fileBuffer, excelPath);
             }
 
+            stage = "upload-drive";
             const folderId = fields.folder_id || (event.queryStringParameters || {}).folder_id;
             const excelDriveId = await uploadToDrive(excelPath, excelName, folderId || undefined);
 
+            stage = "cleanup";
             fs.unlinkSync(pdfPath);
             fs.unlinkSync(excelPath);
 
@@ -622,8 +631,16 @@ exports.handler = async (event) => {
         );
     } catch (error) {
         const message = error && error.message ? error.message : "Server error";
+        const debug = process.env.DEBUG_ERRORS === "true";
+        const payload = {
+            detail: message,
+            stage,
+        };
+        if (debug && error && error.stack) {
+            payload.stack = error.stack;
+        }
         return withCors(
-            { statusCode: 500, body: JSON.stringify({ detail: message }) },
+            { statusCode: 500, body: JSON.stringify(payload) },
             origin
         );
     }
