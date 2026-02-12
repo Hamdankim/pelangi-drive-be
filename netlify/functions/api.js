@@ -17,6 +17,7 @@ const DEFAULT_ORIGINS = [
 ];
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(os.tmpdir(), "pelangi-temp");
+const CREDENTIALS_DIR = process.env.CREDENTIALS_DIR || os.tmpdir();
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const ROOT_FOLDER_ID =
@@ -86,8 +87,16 @@ function safeFilename(filename) {
     return cleaned || "file";
 }
 
+function resolveCredentialPath(fileName) {
+    const localPath = path.join(process.cwd(), fileName);
+    if (fs.existsSync(localPath)) {
+        return localPath;
+    }
+    return path.join(CREDENTIALS_DIR, fileName);
+}
+
 function loadJsonFile(fileName) {
-    const filePath = path.join(process.cwd(), fileName);
+    const filePath = resolveCredentialPath(fileName);
     const content = fs.readFileSync(filePath, "utf-8");
     return JSON.parse(content);
 }
@@ -120,8 +129,8 @@ function getDrive() {
         return driveClient;
     }
 
-    writeJsonFromEnv("TOKEN_JSON_BASE64", path.join(process.cwd(), "token.json"));
-    writeJsonFromEnv("CLIENT_SECRET_JSON_BASE64", path.join(process.cwd(), "client_secret.json"));
+    writeJsonFromEnv("TOKEN_JSON_BASE64", path.join(CREDENTIALS_DIR, "token.json"));
+    writeJsonFromEnv("CLIENT_SECRET_JSON_BASE64", path.join(CREDENTIALS_DIR, "client_secret.json"));
 
     const token = loadJsonFile("token.json");
     const clientSecret = loadJsonFile("client_secret.json");
