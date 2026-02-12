@@ -476,6 +476,8 @@ exports.handler = async (event) => {
         }
 
         if (routePath === "/health" && event.httpMethod === "GET") {
+            writeJsonFromEnv("TOKEN_JSON_BASE64", path.join(CREDENTIALS_DIR, "token.json"));
+            writeJsonFromEnv("CLIENT_SECRET_JSON_BASE64", path.join(CREDENTIALS_DIR, "client_secret.json"));
             const tokenPath = resolveCredentialPath("token.json");
             const clientPath = resolveCredentialPath("client_secret.json");
             const status = {
