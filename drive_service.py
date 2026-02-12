@@ -2,15 +2,43 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from datetime import datetime
+import base64
 import io
 import os
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
+
+def _write_json_from_env(env_name, target_path):
+    if os.path.exists(target_path):
+        return
+    payload = os.getenv(env_name)
+    if not payload:
+        return
+    content = payload.strip()
+    if content.startswith("{"):
+        with open(target_path, "w", encoding="utf-8") as handle:
+            handle.write(content)
+        return
+    try:
+        decoded = base64.b64decode(content)
+    except Exception:
+        return
+    with open(target_path, "wb") as handle:
+        handle.write(decoded)
+
+
+_write_json_from_env("TOKEN_JSON_BASE64", "token.json")
+_write_json_from_env("CLIENT_SECRET_JSON_BASE64", "client_secret.json")
+
 creds = Credentials.from_authorized_user_file('token.json', SCOPES)
 drive_service = build('drive', 'v3', credentials=creds)
 
-ROOT_FOLDER_ID = os.getenv("DRIVE_ROOT_FOLDER_ID", "18c_Shx04J8MJOOSD-qv7iCnAoT-qHanb")
+ROOT_FOLDER_ID = (
+    os.getenv("DRIVE_ROOT_FOLDER_ID")
+    or os.getenv("DRIVE_FOLDER_ID")
+    or "18c_Shx04J8MJOOSD-qv7iCnAoT-qHanb"
+)
 
 
 def get_or_create_folder(name, parent_id):

@@ -56,3 +56,35 @@ This app needs these files at runtime:
 
 Recommended: store them as Render Secret Files and mount to the app root
 so the paths remain the same.
+
+## Deploy to Netlify Functions
+
+This repo includes a serverless entry point at netlify/functions/api.py.
+
+### Required settings (Netlify UI)
+
+- Build command: pip install -r requirements.txt
+- Functions directory: netlify/functions
+- Environment variables:
+	- PDFCO_API_KEY (required for Neraca conversion)
+	- DRIVE_ROOT_FOLDER_ID or DRIVE_FOLDER_ID (optional)
+	- CORS_ORIGINS (optional)
+	- UPLOAD_DIR=/tmp/pelangi-temp (recommended)
+
+### Google Drive credentials on Netlify
+
+Netlify does not support secret files. Use env vars to provide JSON contents:
+
+- TOKEN_JSON_BASE64: base64-encoded token.json
+- CLIENT_SECRET_JSON_BASE64: base64-encoded client_secret.json
+
+You can generate base64 like this:
+
+```bash
+python - <<'PY'
+import base64
+print(base64.b64encode(open('token.json','rb').read()).decode())
+PY
+```
+
+The app will write these files at startup if they do not exist.

@@ -60,7 +60,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = "temp"
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "temp")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
