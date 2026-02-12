@@ -240,7 +240,10 @@ function convertPdfToExcel(buffer, outputPath) {
 
         pdfParser.on("pdfParser_dataReady", (pdfData) => {
             const rows = [];
-            for (const page of pdfData.formImage.Pages || []) {
+            const pages = pdfData && pdfData.formImage && pdfData.formImage.Pages
+                ? pdfData.formImage.Pages
+                : [];
+            for (const page of pages) {
                 rows.push(...extractRowsFromPage(page));
                 rows.push([]);
             }
