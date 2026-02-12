@@ -39,14 +39,22 @@ class CreateFolderRequest(BaseModel):
     name: str
     parent_id: str | None = None
 
+default_origins = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "https://pelangidrive.netlify.app",
+]
+cors_env = os.getenv("CORS_ORIGINS")
+if cors_env:
+    allowed_origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
+else:
+    allowed_origins = default_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost",
-        "http://127.0.0.1",
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
