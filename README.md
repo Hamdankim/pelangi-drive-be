@@ -59,11 +59,11 @@ so the paths remain the same.
 
 ## Deploy to Netlify Functions
 
-This repo includes a serverless entry point at netlify/functions/api.py.
+This repo includes a serverless entry point at netlify/functions/api.js.
 
 ### Required settings (Netlify UI)
 
-- Build command: pip install -r requirements.txt
+- Build command: npm install
 - Functions directory: netlify/functions
 - Environment variables:
 	- PDFCO_API_KEY (required for Neraca conversion)
@@ -73,18 +73,5 @@ This repo includes a serverless entry point at netlify/functions/api.py.
 
 ### Google Drive credentials on Netlify
 
-Netlify does not support secret files. Use env vars to provide JSON contents:
-
-- TOKEN_JSON_BASE64: base64-encoded token.json
-- CLIENT_SECRET_JSON_BASE64: base64-encoded client_secret.json
-
-You can generate base64 like this:
-
-```bash
-python - <<'PY'
-import base64
-print(base64.b64encode(open('token.json','rb').read()).decode())
-PY
-```
-
-The app will write these files at startup if they do not exist.
+Netlify does not support secret files. For simplicity, this setup expects
+token.json and client_secret.json to be committed to the repo.

@@ -1,8 +1,11 @@
 [build]
+  command = "npm install"
   functions = "netlify/functions"
+  publish = "."
 
 [build.environment]
   UPLOAD_DIR = "/tmp/pelangi-temp"
+  NODE_VERSION = "18"
 
 [[redirects]]
   from = "/*"
